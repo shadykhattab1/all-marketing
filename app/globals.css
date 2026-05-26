@@ -1,0 +1,84 @@
+@import "tailwindcss";
+
+:root {
+  /* Light enterprise theme — Valkyn Marketing */
+  --vk-void:         #F8FAFC;
+  --vk-deep:         #F1F5F9;
+  --vk-surface:      #FFFFFF;
+  --vk-elevated:     #F8FAFC;
+  --vk-card:         #FFFFFF;
+
+  /* Teal accent — Valkyn Marketing identity */
+  --vk-accent-dim:   #0F766E;
+  --vk-accent:       #0F766E;
+  --vk-accent-bright:#0891B2;
+  --vk-accent-glow:  rgba(15, 118, 110, 0.18);
+  --vk-accent-muted: #F0FDFA;
+  --vk-accent-mid:   #99F6E4;
+
+  /* Status */
+  --vk-green:        #16A34A;
+  --vk-green-bg:     #F0FDF4;
+  --vk-amber:        #B45309;
+  --vk-amber-bg:     #FFFBEB;
+
+  /* Text */
+  --vk-text:         #0F172A;
+  --vk-text-sec:     #475569;
+  --vk-text-muted:   #94A3B8;
+
+  /* Borders */
+  --vk-border:       #E2E8F0;
+  --vk-border-dark:  #CBD5E1;
+  --vk-border-accent:#99F6E4;
+
+  /* Navy (Valkyn brand) */
+  --vk-navy:         #1F4E79;
+}
+
+@theme inline {
+  --color-vk-void:         var(--vk-void);
+  --color-vk-deep:         var(--vk-deep);
+  --color-vk-surface:      var(--vk-surface);
+  --color-vk-elevated:     var(--vk-elevated);
+  --color-vk-card:         var(--vk-card);
+  --color-vk-accent-dim:   var(--vk-accent-dim);
+  --color-vk-accent:       var(--vk-accent);
+  --color-vk-accent-bright:var(--vk-accent-bright);
+  --color-vk-accent-muted: var(--vk-accent-muted);
+  --color-vk-accent-mid:   var(--vk-accent-mid);
+  --color-vk-text:         var(--vk-text);
+  --color-vk-text-sec:     var(--vk-text-sec);
+  --color-vk-text-muted:   var(--vk-text-muted);
+  --color-vk-border:       var(--vk-border);
+  --color-vk-border-dark:  var(--vk-border-dark);
+  --color-vk-border-accent:var(--vk-border-accent);
+  --color-vk-navy:         var(--vk-navy);
+  --font-sans:    var(--font-inter);
+  --font-display: var(--font-inter);
+}
+
+body {
+  background: var(--vk-void);
+  color: var(--vk-text);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: var(--vk-accent-dim) var(--vk-border);
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(15,118,110,.2);
+  border-color: var(--vk-accent) !important;
+}
+
+::selection {
+  background: rgba(15, 118, 110, 0.15);
+  color: var(--vk-text);
+}

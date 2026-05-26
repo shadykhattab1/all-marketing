@@ -1,0 +1,15 @@
+{"ts":"2026-05-26T14:07:03Z","error":" »   Error: command next:build not found","fail":null}
+{"ts":"2026-05-26T14:07:34Z","error":"> Build error occurred","fail":"Error: Turbopack build failed with 2 errors:"}
+{"ts":"2026-05-26T14:09:54Z","error":"npm error Cannot read properties of null (reading 'matches')","fail":null}
+{"ts":"2026-05-26T14:10:41Z","error":"error: The datasource property `directUrl` is no longer supported in schema files. Move connection URLs to `prisma.config.ts`. See https://pris.ly/d/config-datasource","fail":null}
+{"ts":"2026-05-26T14:12:49Z","error":"> Build error occurred","fail":"Error: Turbopack build failed with 1 errors:"}
+{"ts":"2026-05-26T14:13:15Z","error":"> Build error occurred","fail":"Error: Turbopack build failed with 1 errors:"}
+{"ts":"2026-05-26T14:14:10Z","error":"Type error: Type 'typeof import(\"C:/Users/scdav/all-marketing/app/api/campaigns/[id]/route\")' does not satisfy the constraint 'RouteHandlerConfig<\"/api/campaigns/[id]\">'.","fail":null}
+{"ts":"2026-05-26T14:15:31Z","error":"Type error: Type '{ status?: \"draft\" | \"generating\" | \"complete\" | \"distributed\" | undefined; reels?: unknown[] | undefined; content?: Record<string, unknown> | undefined; }' is not assignable to type","fail":null}
+{"ts":"2026-05-26T14:16:19Z","error":"Type error: Type 'Record<string, unknown>' is not assignable to type 'JsonNullClass | InputJsonValue'.","fail":null}
+{"ts":"2026-05-26T14:16:55Z","error":"Type error: Type 'Record<string, unknown>' is not assignable to type 'JsonNullClass | InputJsonValue'.","fail":null}
+{"ts":"2026-05-26T14:17:49Z","error":"Type error: Conversion of type 'string | number | boolean | JsonObject | JsonArray | null' to type 'BrandProfile' may be a mistake because neither type sufficiently overlaps with the other. If this wa","fail":null}
+{"ts":"2026-05-26T14:18:34Z","error":"Error occurred prerendering page \"/create\". Read more: https://nextjs.org/docs/messages/prerender-error","fail":null}
+{"ts":"2026-05-26T14:19:42Z","error":"Error occurred prerendering page \"/create\". Read more: https://nextjs.org/docs/messages/prerender-error","fail":null}
+{"ts":"2026-05-26T14:20:20Z","error":"Error occurred prerendering page \"/create\". Read more: https://nextjs.org/docs/messages/prerender-error","fail":null}
+{"ts":"2026-05-26T14:20:55Z","error":"Error occurred prerendering page \"/create\". Read more: https://nextjs.org/docs/messages/prerender-error","fail":null}
