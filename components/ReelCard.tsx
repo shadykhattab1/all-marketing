@@ -17,6 +17,8 @@ export function ReelCard({ reel, index, brandName, brand }: ReelCardProps) {
   const [copied, setCopied] = useState(false)
   const [activeClipIndex, setActiveClipIndex] = useState(0)
   const [videoUrls, setVideoUrls] = useState<string[]>(reel.videoUrls ?? [])
+  const [imageUrl, setImageUrl] = useState<string | null>(null)
+  const [mediaType, setMediaType] = useState<'video' | 'image' | null>(reel.videoUrls?.length ? 'video' : null)
   const [videoStatus, setVideoStatus] = useState<'idle' | 'generating' | 'done' | 'failed'>(
     reel.videoUrls?.length ? 'done' : 'idle'
   )
@@ -35,15 +37,24 @@ export function ReelCard({ reel, index, brandName, brand }: ReelCardProps) {
           duration: reel.totalDuration,
         }),
       })
-      if (!res.ok) throw new Error(await res.text())
-      const data = await res.json() as { videoUrls?: string[] }
-      if (data.videoUrls?.length) {
+      if (!res.ok) {
+        const txt = await res.text()
+        throw new Error(txt)
+      }
+      const data = await res.json() as { videoUrls?: string[]; imageUrl?: string; type?: string }
+      if (data.type === 'video' && data.videoUrls?.length) {
         setVideoUrls(data.videoUrls)
+        setMediaType('video')
+        setVideoStatus('done')
+      } else if (data.imageUrl) {
+        setImageUrl(data.imageUrl)
+        setMediaType('image')
         setVideoStatus('done')
       } else {
         setVideoStatus('failed')
       }
-    } catch {
+    } catch (e) {
+      console.error('[ReelCard] generate-video error:', e)
       setVideoStatus('failed')
     }
   }
@@ -97,7 +108,17 @@ export function ReelCard({ reel, index, brandName, brand }: ReelCardProps) {
 
       {/* Video area */}
       <div className="aspect-[9/16] max-h-72 bg-gradient-to-b from-[#1F4E79] to-zinc-950 relative flex items-center justify-center overflow-hidden">
-        {hasVideo ? (
+        {mediaType === 'image' && imageUrl ? (
+          <div className="w-full h-full relative">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={imageUrl} alt="Reel preview" className="w-full h-full object-cover" />
+            <div className="absolute bottom-2 left-0 right-0 flex justify-center">
+              <span className="bg-black/60 text-white/70 text-[10px] px-2.5 py-1 rounded-full">
+                📸 AI Preview — add fal.ai credits for real video
+              </span>
+            </div>
+          </div>
+        ) : hasVideo ? (
           <>
             <video
               ref={videoRef}

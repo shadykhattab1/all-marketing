@@ -16,23 +16,22 @@ const RequestSchema = z.object({
 })
 
 const TONE_STYLE: Record<string, string> = {
-  professional: 'clean corporate aesthetic, polished lighting, confident atmosphere',
-  casual: 'warm natural lighting, relaxed candid feel, lifestyle vibe',
-  playful: 'vibrant colors, energetic movement, fun dynamic angles',
-  luxurious: 'cinematic lighting, slow elegant motion, premium bokeh',
-  educational: 'clean bright environment, focused close-ups, informative flow',
+  professional: 'clean corporate aesthetic, polished lighting, confident atmosphere, office environment',
+  casual: 'warm natural lighting, relaxed lifestyle setting, candid feel',
+  playful: 'vibrant colorful background, energetic dynamic composition',
+  luxurious: 'cinematic bokeh, premium elegant interior, golden hour light',
+  educational: 'clean bright studio, focused composition, modern workspace',
 }
 
-const NEGATIVE_PROMPT = 'blurry, low quality, text overlays, watermark, static, frozen, distorted'
+const NEGATIVE_PROMPT = 'blurry, low quality, text overlays, watermark, distorted faces, ugly'
 
 function buildPrompt(brand: { name: string; niche: string; tone: string }, hook: string, body: string[]) {
   const style = TONE_STYLE[brand.tone] ?? 'cinematic professional quality'
   return [
-    `Cinematic 9:16 vertical brand video for ${brand.name}, a ${brand.niche} brand.`,
-    `Scene concept: ${hook}. ${body.slice(0, 2).join('. ')}.`,
-    `Visual style: ${style}.`,
-    `Smooth camera movement, shallow depth of field, high production value.`,
-    `No text overlays, no watermarks. Realistic motion, natural lighting.`,
+    `Cinematic 9:16 vertical social media visual for ${brand.name}, a ${brand.niche} brand.`,
+    `Concept: ${hook}. ${body.slice(0, 2).join('. ')}.`,
+    `Style: ${style}.`,
+    `High production value, shallow depth of field, no text, no watermarks.`,
   ].join(' ')
 }
 
@@ -47,36 +46,62 @@ function extractVideoUrl(result: unknown): string | undefined {
   return undefined
 }
 
-export async function POST(req: NextRequest) {
-  if (!falConfigured) {
-    return NextResponse.json({ error: 'Video generation not configured (FAL_KEY missing)' }, { status: 503 })
-  }
+function pollinationsUrl(prompt: string): string {
+  const encoded = encodeURIComponent(prompt.slice(0, 500))
+  return `https://image.pollinations.ai/prompt/${encoded}?width=576&height=1024&nologo=true&model=flux&seed=${Date.now() % 9999}`
+}
 
+export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
     const { brand, hook, body: scriptBody, duration } = RequestSchema.parse(body)
     const prompt = buildPrompt(brand, hook, scriptBody)
 
-    // Generate a single clip (5s or 10s) — keep within timeout budget
-    const clipDuration: '5' | '10' = duration >= 10 ? '10' : '5'
+    // ── Try Kling via fal.ai ──────────────────────────────────────────────────
+    if (falConfigured) {
+      try {
+        const clipDuration: '5' | '10' = duration >= 10 ? '10' : '5'
+        const { fal } = await import('@fal-ai/client')
+        fal.config({ credentials: process.env.FAL_KEY })
 
-    const { fal } = await import('@fal-ai/client')
-    fal.config({ credentials: process.env.FAL_KEY })
+        const result = await fal.subscribe('fal-ai/kling-video/v1.6/standard/text-to-video', {
+          input: { prompt, duration: clipDuration, aspect_ratio: '9:16', negative_prompt: NEGATIVE_PROMPT },
+          pollInterval: 5000,
+        })
 
-    const result = await fal.subscribe('fal-ai/kling-video/v1.6/standard/text-to-video', {
-      input: { prompt, duration: clipDuration, aspect_ratio: '9:16', negative_prompt: NEGATIVE_PROMPT },
-      pollInterval: 5000,
-    })
-
-    const url = extractVideoUrl(result)
-    if (!url) {
-      return NextResponse.json({ error: 'No video URL in Kling response' }, { status: 500 })
+        const url = extractVideoUrl(result)
+        if (url) {
+          return NextResponse.json({ videoUrls: [url], type: 'video' })
+        }
+      } catch (falErr) {
+        const msg = falErr instanceof Error ? falErr.message : String(falErr)
+        const isBalance = msg.includes('balance') || msg.includes('403') || msg.includes('Forbidden') || msg.includes('locked')
+        console.warn('[generate-video] fal failed, falling back to image preview:', isBalance ? 'balance exhausted' : msg)
+        // Fall through to image fallback
+      }
     }
 
-    return NextResponse.json({ videoUrls: [url] })
+    // ── Fallback: Pollinations.ai image preview (free, no key) ──────────────
+    const imageUrl = pollinationsUrl(prompt)
+
+    // Verify the image loads (Pollinations is ~99% reliable but let's check quickly)
+    try {
+      const check = await fetch(imageUrl, { method: 'HEAD', signal: AbortSignal.timeout(8000) })
+      if (!check.ok) throw new Error(`Pollinations ${check.status}`)
+    } catch {
+      // If HEAD fails, still return the URL — browser will handle it
+    }
+
+    return NextResponse.json({
+      imageUrl,
+      videoUrls: [],
+      type: 'image',
+      note: 'Image preview — add fal.ai credits for real video',
+    })
+
   } catch (err) {
     console.error('[generate-video]', err)
-    const message = err instanceof Error ? err.message : 'Video generation failed'
+    const message = err instanceof Error ? err.message : 'Generation failed'
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }
