@@ -140,45 +140,14 @@ async function generateReelVideos(
   })
 }
 
-async function generateReel(
-  script: ReelScript,
-  brand: { name: string; niche: string; tone: string },
-  duration: number,
-  imageBase64?: string,
-): Promise<ReelResult> {
+function scriptToReel(script: ReelScript, duration: number): ReelResult {
   const clipDurations = computeClipDurations(duration)
-
-  if (!falConfigured) {
-    return {
-      script,
-      videoUrls: [],
-      totalClips: clipDurations.length,
-      totalDuration: duration,
-      status: 'complete',
-    }
-  }
-
-  try {
-    const { fal } = await import('@fal-ai/client')
-    fal.config({ credentials: process.env.FAL_KEY })
-
-    const videoUrls = await generateReelVideos(fal, script, brand, duration, imageBase64)
-    return {
-      script,
-      videoUrls,
-      totalClips: clipDurations.length,
-      totalDuration: duration,
-      status: 'complete',
-    }
-  } catch (error) {
-    console.error('[generate-reels] video generation failed for script:', script.hookFormatId, error)
-    return {
-      script,
-      videoUrls: [],
-      totalClips: clipDurations.length,
-      totalDuration: duration,
-      status: 'failed',
-    }
+  return {
+    script,
+    videoUrls: [],
+    totalClips: clipDurations.length,
+    totalDuration: duration,
+    status: 'pending',
   }
 }
 
@@ -189,23 +158,7 @@ export async function POST(req: NextRequest) {
 
     const scripts = await generateScripts(brand, count, [], reelIdea)
 
-    const reelPromises = scripts.map((script) =>
-      generateReel(script, { name: brand.name, niche: brand.niche, tone: brand.tone }, duration)
-    )
-
-    const settled = await Promise.allSettled(reelPromises)
-
-    const reels: ReelResult[] = settled.map((result, i) => {
-      if (result.status === 'fulfilled') return result.value
-      console.error('[generate-reels] reel promise rejected:', i, result.reason)
-      return {
-        script: scripts[i],
-        videoUrls: [],
-        totalClips: computeClipDurations(duration).length,
-        totalDuration: duration,
-        status: 'failed' as const,
-      }
-    })
+    const reels: ReelResult[] = scripts.map(script => scriptToReel(script, duration))
 
     return NextResponse.json({ reels })
   } catch (error) {

@@ -339,6 +339,7 @@ export function CampaignDashboard({ campaign }: CampaignDashboardProps) {
                     reel={reel}
                     index={i + 1}
                     brandName={brand.name}
+                    brand={{ name: brand.name, niche: brand.niche, tone: brand.tone }}
                   />
                 ))}
               </div>

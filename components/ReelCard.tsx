@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { Download, Copy, CheckCheck, Clapperboard, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Download, Copy, CheckCheck, Clapperboard, ChevronLeft, ChevronRight, Play } from 'lucide-react'
 import type { ReelResult } from '@/types'
 import { cn } from '@/lib/utils'
 
@@ -9,15 +9,46 @@ interface ReelCardProps {
   reel: ReelResult
   index: number
   brandName: string
+  brand: { name: string; niche: string; tone: string }
 }
 
-export function ReelCard({ reel, index, brandName }: ReelCardProps) {
+export function ReelCard({ reel, index, brandName, brand }: ReelCardProps) {
   const [captionTab, setCaptionTab] = useState<'instagram' | 'tiktok'>('instagram')
   const [copied, setCopied] = useState(false)
   const [activeClipIndex, setActiveClipIndex] = useState(0)
+  const [videoUrls, setVideoUrls] = useState<string[]>(reel.videoUrls ?? [])
+  const [videoStatus, setVideoStatus] = useState<'idle' | 'generating' | 'done' | 'failed'>(
+    reel.videoUrls?.length ? 'done' : 'idle'
+  )
   const videoRef = useRef<HTMLVideoElement>(null)
 
-  const urls = reel.videoUrls ?? []
+  async function generateVideo() {
+    setVideoStatus('generating')
+    try {
+      const res = await fetch('/api/generate-video', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          brand,
+          hook: reel.script.hook,
+          body: reel.script.body,
+          duration: reel.totalDuration,
+        }),
+      })
+      if (!res.ok) throw new Error(await res.text())
+      const data = await res.json() as { videoUrls?: string[] }
+      if (data.videoUrls?.length) {
+        setVideoUrls(data.videoUrls)
+        setVideoStatus('done')
+      } else {
+        setVideoStatus('failed')
+      }
+    } catch {
+      setVideoStatus('failed')
+    }
+  }
+
+  const urls = videoUrls
   const totalClips = urls.length
   const hasVideo = totalClips > 0
 
@@ -100,16 +131,33 @@ export function ReelCard({ reel, index, brandName }: ReelCardProps) {
             )}
           </>
         ) : (
-          <div className="text-center text-white px-6">
+          <div className="text-center text-white px-6 w-full">
             <p className="text-lg font-bold leading-snug mb-2">
               {reel.script.textOverlays.opening}
             </p>
-            <p className="text-xs text-white/50 italic">{reel.script.hook}</p>
-            {reel.status === 'generating' && (
-              <p className="text-xs text-white/60 mt-3 animate-pulse">Generating video…</p>
-            )}
-            {reel.status === 'failed' && (
-              <p className="text-xs text-red-300 mt-3">Generation failed</p>
+            <p className="text-xs text-white/50 italic mb-4">{reel.script.hook}</p>
+            {videoStatus === 'generating' ? (
+              <div>
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-2" />
+                <p className="text-xs text-white/60 animate-pulse">Generating video… (~60s)</p>
+              </div>
+            ) : videoStatus === 'failed' ? (
+              <div>
+                <p className="text-xs text-red-300 mb-2">Generation failed</p>
+                <button
+                  onClick={generateVideo}
+                  className="flex items-center gap-1.5 mx-auto bg-white/20 hover:bg-white/30 text-white text-xs px-3 py-1.5 rounded-lg transition-colors"
+                >
+                  <Play className="w-3 h-3" /> Retry
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={generateVideo}
+                className="flex items-center gap-1.5 mx-auto bg-[#1F4E79] hover:bg-[#2d6da3] text-white text-xs px-4 py-2 rounded-lg font-medium transition-colors"
+              >
+                <Play className="w-3.5 h-3.5" /> Generate Video
+              </button>
             )}
           </div>
         )}
@@ -204,7 +252,7 @@ export function ReelCard({ reel, index, brandName }: ReelCardProps) {
         ) : (
           <div className="text-center py-1">
             <p className="text-xs text-zinc-600">
-              {reel.status === 'pending' ? 'Video pending generation' : reel.status === 'generating' ? 'Generating…' : 'No video available'}
+              {videoStatus === 'generating' ? 'Generating video…' : 'Click Generate Video above'}
             </p>
           </div>
         )}
