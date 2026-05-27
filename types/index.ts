@@ -463,7 +463,49 @@ export interface CampaignState {
 
 // ─── Unified Campaign ─────────────────────────────────────────────────────────
 
-/** All 13 generator outputs bundled into a single campaign payload. */
+// ─── Sales Catalogue ─────────────────────────────────────────────────────────
+
+export interface CatalogueProduct {
+  name: string
+  description: string
+  price?: string
+  features: string[]
+  highlight?: string   // "Best Seller", "New", "Premium", etc.
+}
+
+export interface SalesCatalogue {
+  coverTitle: string
+  coverTagline: string
+  companyOverview: string
+  products: CatalogueProduct[]
+  whyChooseUs: string[]
+  testimonial?: { quote: string; author: string; company: string }
+  contactCta: string
+  footerText: string
+}
+
+// ─── Sales Kit ────────────────────────────────────────────────────────────────
+
+export interface SalesKitSlide {
+  title: string
+  content: string
+  bullets?: string[]
+  stat?: string
+  statLabel?: string
+}
+
+export interface SalesKit {
+  executiveSummary: string
+  problem: string
+  solution: string
+  differentiators: string[]
+  pricing: Array<{ tier: string; price: string; summary: string }>
+  socialProof: string
+  cta: string
+  slides: SalesKitSlide[]
+}
+
+/** All 13+ generator outputs bundled into a single campaign payload. */
 export interface CampaignContent {
   brandKit?: BrandKit
   seo?: SeoData
@@ -476,8 +518,10 @@ export interface CampaignContent {
   contentCalendar?: ContentCalendar
   competitors?: CompetitorAnalysis
   seoComparison?: SeoComparison
-  image?: string         // DALL-E URL
+  image?: string            // DALL-E URL
   salesMaterials?: SalesMaterialsResult
+  catalogue?: SalesCatalogue
+  salesKit?: SalesKit
 }
 
 /** Reel generation result for a single reel. */

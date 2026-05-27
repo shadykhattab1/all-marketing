@@ -12,7 +12,7 @@ interface CampaignDashboardProps {
   campaign: Campaign
 }
 
-type Tab = 'overview' | 'content' | 'reels' | 'share'
+type Tab = 'overview' | 'content' | 'reels' | 'documents' | 'share'
 
 const CONTENT_CARDS: Array<{
   key: keyof CampaignContent
@@ -30,6 +30,26 @@ const CONTENT_CARDS: Array<{
   { key: 'competitors',   title: 'Competitor Analysis',type: 'competitors' },
   { key: 'seoComparison', title: 'SEO Comparison',     type: 'seo' },
   { key: 'brandKit',      title: 'Brand Kit',          type: 'brand-kit' },
+]
+
+const DOCUMENT_CARDS: Array<{
+  key: keyof CampaignContent
+  title: string
+  type: Parameters<typeof ContentCard>[0]['type']
+  description: string
+}> = [
+  {
+    key: 'catalogue',
+    title: 'Sales Catalogue',
+    type: 'catalogue',
+    description: 'Product/service catalogue with pricing, features, and company overview. Ready to share with prospects.',
+  },
+  {
+    key: 'salesKit',
+    title: 'Sales Kit',
+    type: 'sales-kit',
+    description: 'Full pitch deck outline — problem, solution, differentiators, pricing, and slide-by-slide breakdown.',
+  },
 ]
 
 function StatCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
@@ -86,11 +106,14 @@ export function CampaignDashboard({ campaign }: CampaignDashboardProps) {
     URL.revokeObjectURL(url)
   }
 
+  const totalDocs = DOCUMENT_CARDS.filter(d => content[d.key] != null).length
+
   const TABS: { id: Tab; label: string }[] = [
-    { id: 'overview', label: 'Overview' },
-    { id: 'content',  label: `Content (${totalAssets})` },
-    { id: 'reels',    label: `Reels (${totalReels})` },
-    { id: 'share',    label: 'Share' },
+    { id: 'overview',   label: 'Overview' },
+    { id: 'content',    label: `Content (${totalAssets})` },
+    { id: 'documents',  label: `Documents (${totalDocs})` },
+    { id: 'reels',      label: `Reels (${totalReels})` },
+    { id: 'share',      label: 'Share' },
   ]
 
   return (
@@ -258,6 +281,46 @@ export function CampaignDashboard({ campaign }: CampaignDashboardProps) {
                 </div>
               )
             )}
+          </div>
+        )}
+
+        {/* ── Documents ────────────────────────────────────────────────── */}
+        {tab === 'documents' && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {DOCUMENT_CARDS.map(({ key, title, type, description }) => (
+                <div key={key} className="space-y-3">
+                  <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
+                    <p className="text-xs text-zinc-500 mb-2">{description}</p>
+                    {content[key] == null ? (
+                      <div className="flex items-center gap-2 py-4">
+                        <div className="w-5 h-5 border-2 border-zinc-700 border-t-[#1F4E79] rounded-full animate-spin" />
+                        <p className="text-xs text-zinc-600">Generating {title}…</p>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <span className="text-green-400 text-xs">✓ Ready</span>
+                        <a
+                          href={`/export/${campaign.id}?doc=${key}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="ml-auto flex items-center gap-1.5 bg-[#1F4E79] hover:bg-[#2d6da3] text-white text-xs font-medium px-3 py-1.5 rounded-lg transition-colors"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                          Export PDF
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                  <ContentCard
+                    key={key}
+                    title={title}
+                    content={content[key]}
+                    type={type}
+                  />
+                </div>
+              ))}
+            </div>
           </div>
         )}
 

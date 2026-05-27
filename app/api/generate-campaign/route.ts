@@ -13,6 +13,8 @@ import {
   buildContentCalendarPrompt,
   buildCompetitorAnalysisPrompt,
   buildSeoComparisonPrompt,
+  buildCataloguePrompt,
+  buildSalesKitPrompt,
   JSON_SYSTEM_PROMPT,
 } from '../../../lib/prompts/campaign'
 import type {
@@ -147,6 +149,16 @@ export async function POST(req: Request) {
     [
       'competitors',
       generateText(JSON_SYSTEM_PROMPT, buildCompetitorAnalysisPrompt(brand, profile, competitorHint), 2048)
+        .then(r => extractJson(r)),
+    ],
+    [
+      'catalogue',
+      generateText(JSON_SYSTEM_PROMPT, buildCataloguePrompt(brand, profile), 3000)
+        .then(r => extractJson(r)),
+    ],
+    [
+      'salesKit',
+      generateText(JSON_SYSTEM_PROMPT, buildSalesKitPrompt(brand, profile), 3000)
         .then(r => extractJson(r)),
     ],
     [

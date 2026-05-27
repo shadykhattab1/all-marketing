@@ -410,4 +410,95 @@ Return this exact JSON structure:
 }`;
 }
 
+// ─── Sales Catalogue ─────────────────────────────────────────────────────────
+
+export function buildCataloguePrompt(brand: BrandProfile, profile: BusinessProfile): string {
+  return `Create a professional sales catalogue for this business as JSON.
+
+Business: ${brand.name}
+Tagline: ${brand.tagline ?? ''}
+Industry: ${brand.industry ?? brand.niche}
+Products/Services: ${brand.products.join(', ')}
+USPs: ${profile.uniqueSellingPoints.join(', ')}
+Target Audience: ${profile.targetDemographic}
+Tone: ${profile.toneOfVoice}
+Core Message: ${profile.coreMessage}
+
+Return this exact JSON:
+{
+  "coverTitle": "Bold catalogue title that sells the brand promise (max 8 words)",
+  "coverTagline": "One-line tagline that captures what makes this brand different",
+  "companyOverview": "3-4 sentence company overview for the inside cover. Compelling, not corporate. Mentions the mission, who it's for, and the transformation it delivers.",
+  "products": [
+    {
+      "name": "Product/Service name",
+      "description": "2-3 sentence description that focuses on benefits, not features. Speak to what the customer gains.",
+      "price": "Price or pricing model (e.g. 'From $299', 'Custom quote', 'Starting at $49/mo')",
+      "features": ["Key feature 1", "Key feature 2", "Key feature 3", "Key feature 4"],
+      "highlight": "Optional badge like 'Best Seller', 'New', 'Most Popular', 'Premium' — or omit"
+    }
+  ],
+  "whyChooseUs": [
+    "Reason 1 — specific and credible, not generic",
+    "Reason 2",
+    "Reason 3",
+    "Reason 4",
+    "Reason 5"
+  ],
+  "testimonial": {
+    "quote": "Authentic-sounding testimonial that mentions a specific result or benefit",
+    "author": "First Name L.",
+    "company": "Company or job title"
+  },
+  "contactCta": "Call-to-action text for the back page (e.g. 'Ready to transform your business? Let's talk.')",
+  "footerText": "Short footer with website, tagline, or brand promise"
+}
+
+Generate products for each of the listed products/services. Be specific and sales-focused.`;
+}
+
+// ─── Sales Kit ────────────────────────────────────────────────────────────────
+
+export function buildSalesKitPrompt(brand: BrandProfile, profile: BusinessProfile): string {
+  return `Create a complete sales kit / pitch deck outline for this business as JSON.
+
+Business: ${brand.name}
+Industry: ${brand.industry ?? brand.niche}
+Core Message: ${profile.coreMessage}
+Competitive Edge: ${profile.competitiveEdge}
+USPs: ${profile.uniqueSellingPoints.join(', ')}
+Target Audience: ${profile.targetDemographic}
+Products: ${brand.products.join(', ')}
+Goals: ${brand.goals ?? 'grow revenue and customer base'}
+
+Return this exact JSON:
+{
+  "executiveSummary": "2-3 sentence elevator pitch. Covers: who you are, what problem you solve, why you're the best choice.",
+  "problem": "Describe the core problem your target customer faces. 2-3 sentences. Be specific — use numbers or pain points if possible.",
+  "solution": "How your product/service solves that problem. 2-3 sentences. Connect directly to the problem statement.",
+  "differentiators": [
+    "Differentiator 1 — specific, provable claim",
+    "Differentiator 2",
+    "Differentiator 3",
+    "Differentiator 4"
+  ],
+  "pricing": [
+    {"tier": "Tier name", "price": "Price (e.g. '$99/mo')", "summary": "1-sentence description of what's included"},
+    {"tier": "Tier name", "price": "Price", "summary": "What's included"},
+    {"tier": "Tier name", "price": "Price", "summary": "What's included"}
+  ],
+  "socialProof": "2-3 sentences of social proof — could be stats, testimonials, or client logos. Make it credible and specific.",
+  "cta": "The single next step you want prospects to take (e.g. 'Book a free 30-minute demo', 'Start your free trial')",
+  "slides": [
+    {"title": "Cover", "content": "Brand name + tagline + presenter info placeholder", "bullets": []},
+    {"title": "The Problem", "content": "Problem statement for the slide", "bullets": ["Pain point 1", "Pain point 2", "Pain point 3"], "stat": "71%", "statLabel": "of businesses struggle with this"},
+    {"title": "Our Solution", "content": "Solution overview for the slide", "bullets": ["How it works 1", "How it works 2", "How it works 3"]},
+    {"title": "Why Us", "content": "Competitive positioning statement", "bullets": ["Differentiator 1", "Differentiator 2", "Differentiator 3"]},
+    {"title": "Pricing", "content": "Simple pricing overview", "bullets": ["Tier 1 summary", "Tier 2 summary", "Tier 3 summary"]},
+    {"title": "Social Proof", "content": "Results and testimonials", "bullets": ["Result or testimonial 1", "Result or testimonial 2"]},
+    {"title": "Next Steps", "content": "CTA and contact details placeholder", "bullets": ["Step 1", "Step 2", "Step 3"]}
+  ]
+}`;
+}
+
 export const JSON_SYSTEM_PROMPT = `You are a JSON API. Return ONLY valid JSON with no markdown formatting, no code fences, no explanation. Just raw JSON that can be passed directly to JSON.parse().`
