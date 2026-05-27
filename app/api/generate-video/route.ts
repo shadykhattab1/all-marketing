@@ -46,9 +46,10 @@ function extractVideoUrl(result: unknown): string | undefined {
   return undefined
 }
 
-function pollinationsUrl(prompt: string): string {
+function pollinationsUrl(prompt: string, seed?: number): string {
   const encoded = encodeURIComponent(prompt.slice(0, 500))
-  return `https://image.pollinations.ai/prompt/${encoded}?width=576&height=1024&nologo=true&model=flux&seed=${Date.now() % 9999}`
+  const s = seed ?? (Date.now() % 99999)
+  return `https://image.pollinations.ai/prompt/${encoded}?width=576&height=1024&nologo=true&model=flux&seed=${s}`
 }
 
 export async function POST(req: NextRequest) {
@@ -81,22 +82,19 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // ── Fallback: Pollinations.ai image preview (free, no key) ──────────────
-    const imageUrl = pollinationsUrl(prompt)
-
-    // Verify the image loads (Pollinations is ~99% reliable but let's check quickly)
-    try {
-      const check = await fetch(imageUrl, { method: 'HEAD', signal: AbortSignal.timeout(8000) })
-      if (!check.ok) throw new Error(`Pollinations ${check.status}`)
-    } catch {
-      // If HEAD fails, still return the URL — browser will handle it
-    }
+    // ── Fallback: 3 Pollinations frames for client-side canvas video ─────────
+    const seed = Date.now() % 99999
+    const frames = [
+      pollinationsUrl(`${prompt} opening scene`, seed),
+      pollinationsUrl(`${prompt} mid scene different angle`, seed + 1111),
+      pollinationsUrl(`${prompt} closing scene wider shot`, seed + 2222),
+    ]
 
     return NextResponse.json({
-      imageUrl,
+      frames,
       videoUrls: [],
-      type: 'image',
-      note: 'Image preview — add fal.ai credits for real video',
+      type: 'frames',
+      note: 'Client-side video — 3 AI frames for canvas animation',
     })
 
   } catch (err) {
