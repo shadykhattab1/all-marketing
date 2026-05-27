@@ -17,15 +17,36 @@ const BrandProfileSchema = z.object({
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 async function scrapeUrl(url: string): Promise<string> {
-  const firecrawl = new FirecrawlApp({ apiKey: process.env.FIRECRAWL_API_KEY })
-  const result = await firecrawl.scrapeUrl(url, {
-    formats: ['markdown'],
-    onlyMainContent: true,
-  })
-  if (!result.success || !result.markdown) {
-    throw new Error(`Failed to scrape ${url}`)
+  // Try Firecrawl first (better quality), fall back to native fetch
+  if (process.env.FIRECRAWL_API_KEY) {
+    try {
+      const firecrawl = new FirecrawlApp({ apiKey: process.env.FIRECRAWL_API_KEY })
+      const result = await firecrawl.scrapeUrl(url, {
+        formats: ['markdown'],
+        onlyMainContent: true,
+      })
+      if (result.success && result.markdown) {
+        return result.markdown.slice(0, 8000)
+      }
+    } catch {
+      // fall through to native fetch
+    }
   }
-  return result.markdown.slice(0, 8000) // trim to avoid token overflow
+
+  // Native fetch fallback — strip HTML tags, keep readable text
+  const res = await fetch(url, {
+    headers: { 'User-Agent': 'Mozilla/5.0 (compatible; AllMarketing/1.0)' },
+    signal: AbortSignal.timeout(10_000),
+  })
+  if (!res.ok) throw new Error(`Failed to fetch ${url}: ${res.status}`)
+  const html = await res.text()
+  const text = html
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+  return text.slice(0, 8000)
 }
 
 async function analyzeWithClaude(content: string, contentType: 'url' | 'photo' | 'manual' | 'social', imageBase64?: string, reelIdea?: string): Promise<BrandProfile> {

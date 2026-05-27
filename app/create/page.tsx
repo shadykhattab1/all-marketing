@@ -93,19 +93,22 @@ function CreatePageInner() {
       const createRes = await fetch('/api/campaigns', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId, brand }),
+        body: JSON.stringify({ sessionId, brandName: brand.name, brandProfile: brand }),
       })
 
-      if (!createRes.ok) throw new Error('Failed to create campaign')
+      if (!createRes.ok) {
+        const err = await createRes.json().catch(() => ({}))
+        throw new Error(`Failed to create campaign: ${JSON.stringify(err)}`)
+      }
       const { campaign } = await createRes.json()
       const campaignId: string = campaign.id
 
-      // Fire both generators in parallel — PATCH campaign as results arrive
+      // Fire both generators in parallel
       const [contentResult, reelsResult] = await Promise.allSettled([
         fetch('/api/generate-campaign', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sessionId, brand, campaignId }),
+          body: JSON.stringify({ sessionId, brand }),
         }).then(async (r) => {
           if (!r.ok) throw new Error('Content generation failed')
           const data = await r.json()
@@ -118,7 +121,6 @@ function CreatePageInner() {
           body: JSON.stringify({
             sessionId,
             brand,
-            campaignId,
             count: 3,
             reelIdea: input.reelIdea?.trim() || undefined,
           }),
@@ -134,13 +136,17 @@ function CreatePageInner() {
       if (contentResult.status === 'rejected') setStepStatus('content', 'error')
       if (reelsResult.status === 'rejected') setStepStatus('reels', 'error')
 
-      // Step 4: finalize campaign
+      // Step 4: save generated data + finalize
       setStepStatus('saving', 'active')
+
+      const patchBody: Record<string, unknown> = { sessionId, status: 'complete' }
+      if (contentResult.status === 'fulfilled') patchBody.content = contentResult.value.campaign
+      if (reelsResult.status === 'fulfilled') patchBody.reels = reelsResult.value.reels
 
       await fetch(`/api/campaigns/${campaignId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'complete' }),
+        body: JSON.stringify(patchBody),
       })
 
       setStepStatus('saving', 'complete')
