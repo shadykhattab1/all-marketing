@@ -120,8 +120,10 @@ export function ReelCard({ reel, index, brandName, brand }: ReelCardProps) {
 
       recorder.start(100)
 
-      // 5. Animate — 3 frames × ~3s each = ~9s total video
-      const framesPerSeg = 90 // 30fps × 3s
+      // 5. Animate — spread duration evenly across frames (min 20s)
+      const targetDuration = Math.max(reel.totalDuration, 20)
+      const fps = 30
+      const framesPerSeg = Math.ceil((targetDuration * fps) / images.length)
       const totalFrames = images.length * framesPerSeg
 
       await new Promise<void>(resolve => {

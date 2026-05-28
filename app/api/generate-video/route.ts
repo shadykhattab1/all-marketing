@@ -82,12 +82,14 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // ── Fallback: 3 Pollinations frames for client-side canvas video ─────────
+    // ── Fallback: 5 Pollinations frames for client-side canvas video ─────────
     const seed = Date.now() % 99999
     const frames = [
-      pollinationsUrl(`${prompt} opening scene`, seed),
-      pollinationsUrl(`${prompt} mid scene different angle`, seed + 1111),
-      pollinationsUrl(`${prompt} closing scene wider shot`, seed + 2222),
+      pollinationsUrl(`${prompt} opening establishing shot`, seed),
+      pollinationsUrl(`${prompt} close-up product detail`, seed + 1111),
+      pollinationsUrl(`${prompt} mid scene wide angle`, seed + 2222),
+      pollinationsUrl(`${prompt} lifestyle moment candid`, seed + 3333),
+      pollinationsUrl(`${prompt} closing hero shot brand`, seed + 4444),
     ]
 
     return NextResponse.json({
